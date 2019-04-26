@@ -3,9 +3,11 @@ package main
 import (
 	// "database/sql"
 	// "encoding/json"
+	"database/sql"
 	"fmt"
 	"log"
 	"net/http"
+	"os"
 
 	// "log"
 	// "net/http"
@@ -13,6 +15,7 @@ import (
 	//
 	// jwt "github.com/dgrijalva/jwt-go"
 	"github.com/gorilla/mux"
+	"github.com/lib/pq"
 	// "github.com/lib/pq"
 	// "golang.org/x/crypto/bcrypt"
 )
@@ -31,7 +34,27 @@ type Error struct {
 	Message string `json:"message"`
 }
 
+var db *sql.DB
+
 func main() {
+
+	// DB setup
+	pgUrl, err := pq.ParseURL(os.Getenv("ELEPHANTSQL_URL"))
+
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	db, err = sql.Open("postgres", pgUrl)
+
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	fmt.Println(pgUrl)
+
+	err = db.Ping()
+
 	router := mux.NewRouter()
 	router.HandleFunc("/signup", signup).Methods("POST")
 	router.HandleFunc("/login", login).Methods("POST")
