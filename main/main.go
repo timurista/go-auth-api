@@ -1,8 +1,6 @@
 package main
 
 import (
-	// "database/sql"
-	// "encoding/json"
 	"database/sql"
 	"encoding/json"
 	"fmt"
@@ -16,6 +14,7 @@ import (
 	//
 	// jwt "github.com/dgrijalva/jwt-go"
 	"github.com/davecgh/go-spew/spew"
+	"github.com/dgrijalva/jwt-go"
 	"github.com/gorilla/mux"
 	"github.com/lib/pq"
 	"golang.org/x/crypto/bcrypt"
@@ -75,6 +74,21 @@ func responseJSON(w http.ResponseWriter, user User) {
 	json.NewEncoder(w).Encode(user)
 }
 
+func GenerateToken(user User) (string, error) {
+	secret := "secret"
+
+	token := jwt.NewWithClaims(jwt.SigningMethodHS256, jwt.MapClaims{
+		"email": user.Email,
+		"iss":   "course",
+	})
+	// spew.Dump(token)
+	tokenString, err := token.SignedString([]byte(secret))
+	if err != nil {
+		log.Fatal(err)
+	}
+	return tokenString, nil
+}
+
 func signup(w http.ResponseWriter, r *http.Request) {
 	var user User
 	var error Error
@@ -118,7 +132,16 @@ func signup(w http.ResponseWriter, r *http.Request) {
 }
 
 func login(w http.ResponseWriter, r *http.Request) {
-	w.Write([]byte("successfully called login"))
+
+	var user User
+	json.NewDecoder(r.Body).Decode(&user)
+
+	token, err := GenerateToken(user)
+	if err != nil {
+		log.Fatal(err)
+	}
+	fmt.Println(token)
+	// w.Write([]byte("successfully called login"))
 }
 
 func protectedEndpoint(w http.ResponseWriter, r *http.Request) {
