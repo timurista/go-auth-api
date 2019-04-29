@@ -18,8 +18,7 @@ import (
 	"github.com/davecgh/go-spew/spew"
 	"github.com/gorilla/mux"
 	"github.com/lib/pq"
-	// "github.com/lib/pq"
-	// "golang.org/x/crypto/bcrypt"
+	"golang.org/x/crypto/bcrypt"
 )
 
 type User struct {
@@ -72,14 +71,15 @@ func respondWithError(w http.ResponseWriter, status int, error Error) {
 	json.NewEncoder(w).Encode(error)
 }
 
+func responseJSON(w http.ResponseWriter, user User) {
+	json.NewEncoder(w).Encode(user)
+}
+
 func signup(w http.ResponseWriter, r *http.Request) {
 	var user User
 	var error Error
 
 	json.NewDecoder(r.Body).Decode(&user)
-	// fmt.Println(user)
-	// fmt.Println("-------")
-	spew.Dump(user)
 
 	if user.Email == "" {
 		error.Message = "Email is missing"
@@ -93,7 +93,28 @@ func signup(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	w.Write([]byte("successfully called signup"))
+	// password hashing / salting
+	hash, err := bcrypt.GenerateFromPassword([]byte(user.Password), 10)
+	// fmt.Println(user)
+	// fmt.Println("-------")
+	if err != nil {
+		log.Fatal(err)
+		return
+	}
+	user.Password = string(hash)
+	spew.Dump(user)
+
+	stmt := "insert into users (email, password) values($1, $2) RETURNING id"
+	err = db.QueryRow(stmt, user.Email, user.Password).Scan(&user.ID)
+	if err != nil {
+		error.Message = "Server error"
+		respondWithError(w, http.StatusInternalServerError, error)
+		return
+	}
+	user.Password = ""
+
+	w.Header().Set("Content-Type", "application/json")
+	responseJSON(w, user)
 }
 
 func login(w http.ResponseWriter, r *http.Request) {
