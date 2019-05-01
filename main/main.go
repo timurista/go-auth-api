@@ -7,11 +7,8 @@ import (
 	"log"
 	"net/http"
 	"os"
+	"strings"
 
-	// "log"
-	// "net/http"
-	// "strings"
-	//
 	// jwt "github.com/dgrijalva/jwt-go"
 	"github.com/davecgh/go-spew/spew"
 	"github.com/dgrijalva/jwt-go"
@@ -196,6 +193,40 @@ func protectedEndpoint(w http.ResponseWriter, r *http.Request) {
 }
 
 func TokenVerifyMiddleWare(next http.HandlerFunc) http.HandlerFunc {
-	fmt.Printf("TokenVerifyMiddleWare\n")
-	return nil
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		var errorObject Error
+		authHeader := r.Header.Get("Authorization")
+		bearerToken := strings.Split(authHeader, " ")
+		// fmt.Println(bearerToken)
+
+		if len(bearerToken) == 2 {
+			authToken := bearerToken[1]
+			token, error := jwt.Parse(authToken, func(token *jwt.Token) (interface{}, error) {
+				// spew.Dump(token)
+				if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
+					return nil, fmt.Errorf("There was an error")
+				}
+				return []byte("secret"), nil
+			})
+
+			if error != nil {
+				errorObject.Message = error.Error()
+				respondWithError(w, http.StatusUnauthorized, errorObject)
+				return
+			}
+
+			if token.Valid {
+				next.ServeHTTP(w, r)
+			} else {
+				errorObject.Message = error.Error()
+				respondWithError(w, http.StatusUnauthorized, errorObject)
+				return
+			}
+		} else {
+			errorObject.Message = "Invalid Token"
+			respondWithError(w, http.StatusUnauthorized, errorObject)
+			return
+		}
+	})
+
 }
