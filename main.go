@@ -9,6 +9,8 @@ import (
 	"os"
 	"strings"
 
+	"github.com/subosito/gotenv"
+
 	// jwt "github.com/dgrijalva/jwt-go"
 	"github.com/davecgh/go-spew/spew"
 	"github.com/dgrijalva/jwt-go"
@@ -16,6 +18,10 @@ import (
 	"github.com/lib/pq"
 	"golang.org/x/crypto/bcrypt"
 )
+
+func init() {
+	gotenv.Load()
+}
 
 type User struct {
 	ID       int32  `json:"id"`
@@ -72,7 +78,7 @@ func responseJSON(w http.ResponseWriter, data interface{}) {
 }
 
 func GenerateToken(user User) (string, error) {
-	secret := "secret"
+	secret := os.Getenv("SECRET")
 
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, jwt.MapClaims{
 		"email": user.Email,
@@ -206,7 +212,7 @@ func TokenVerifyMiddleWare(next http.HandlerFunc) http.HandlerFunc {
 				if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
 					return nil, fmt.Errorf("There was an error")
 				}
-				return []byte("secret"), nil
+				return []byte(os.Getenv("SECRET")), nil
 			})
 
 			if error != nil {
