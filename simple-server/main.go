@@ -4,11 +4,16 @@ import (
 	"fmt"
 	"net/http"
 	"os"
+
+	"github.com/timurista/go-auth-api/api"
 )
 
 func main() {
 	http.HandleFunc("/", index)
 	http.HandleFunc("/api/echo", echo)
+
+	http.HandleFunc("api/books", api.BooksHandleFunc)
+
 	fmt.Println("running on 8080")
 	http.ListenAndServe(port(), nil)
 }
