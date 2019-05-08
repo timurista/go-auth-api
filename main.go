@@ -9,8 +9,8 @@ import (
 	"os"
 	"strings"
 
-	"./driver"
-	"./models"
+	"github.com/timurista/go-auth-api/driver"
+	"github.com/timurista/go-auth-api/models"
 
 	"github.com/davecgh/go-spew/spew"
 	"github.com/dgrijalva/jwt-go"
