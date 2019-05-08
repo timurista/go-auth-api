@@ -43,14 +43,6 @@ func BooksHandleFunc(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusBadRequest)
 		w.Write([]byte("Unsupported request method."))
 	}
-
-	b, err := json.Marshal(books)
-	if err != nil {
-		panic(err)
-	}
-
-	w.Header().Add("Content-Type", "application/json; charset=utf-8")
-	w.Write(b)
 }
 
 // AllBooks returns a slice of all books
