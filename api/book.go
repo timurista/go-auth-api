@@ -2,6 +2,7 @@ package api
 
 import (
 	"encoding/json"
+	"io/ioutil"
 	"net/http"
 )
 
@@ -29,9 +30,9 @@ func FromJSON(data []byte) Book {
 	return book
 }
 
-var books = []Book{
-	Book{Title: "A good day to die", Author: "me", ISBN: "12345"},
-	Book{Title: "Cloud Native Go", Author: "someone", ISBN: "12123"},
+var books = map[string]Book{
+	"12345": Book{Title: "A good day to die", Author: "me", ISBN: "12345"},
+	"12123": Book{Title: "Cloud Native Go", Author: "someone", ISBN: "12123"},
 }
 
 func BooksHandleFunc(w http.ResponseWriter, r *http.Request) {
@@ -39,6 +40,19 @@ func BooksHandleFunc(w http.ResponseWriter, r *http.Request) {
 	case http.MethodGet:
 		books := AllBooks()
 		writeJSON(w, books)
+	case http.MethodPost:
+		body, err := ioutil.ReadAll(r.Body)
+		if err != nil {
+			w.WriteHeader(http.StatusInternalServerError)
+			book := FromJSON(body)
+			isbn, created := CreateBook(book)
+			if created {
+				w.Header().Add("Location", "api/books/"+isbn)
+				w.WriteHeader(http.StatusCreated)
+			} else {
+				w.WriteHeader(http.StatusConflict)
+			}
+		}
 	default:
 		w.WriteHeader(http.StatusBadRequest)
 		w.Write([]byte("Unsupported request method."))
@@ -54,6 +68,15 @@ func AllBooks() []Book {
 		idx++
 	}
 	return values
+}
+
+func CreateBook(book Book) (string, bool) {
+	_, exists := books[book.ISBN]
+	if exists {
+		return "", false
+	}
+	books[book.ISBN] = book
+	return book.ISBN, true
 }
 
 func writeJSON(w http.ResponseWriter, i interface{}) {
