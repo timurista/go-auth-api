@@ -5,7 +5,7 @@ import (
 	"net/http"
 	"os"
 
-	"github.com/timurista/go-auth-api/api"
+	"go-auth-api/api"
 )
 
 func main() {

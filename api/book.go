@@ -2,6 +2,7 @@ package api
 
 import (
 	"encoding/json"
+	"fmt"
 	"io/ioutil"
 	"net/http"
 )
@@ -42,16 +43,17 @@ func BooksHandleFunc(w http.ResponseWriter, r *http.Request) {
 		writeJSON(w, books)
 	case http.MethodPost:
 		body, err := ioutil.ReadAll(r.Body)
+		fmt.Println("POST METHOD READ", body)
 		if err != nil {
 			w.WriteHeader(http.StatusInternalServerError)
-			book := FromJSON(body)
-			isbn, created := CreateBook(book)
-			if created {
-				w.Header().Add("Location", "api/books/"+isbn)
-				w.WriteHeader(http.StatusCreated)
-			} else {
-				w.WriteHeader(http.StatusConflict)
-			}
+		}
+		book := FromJSON(body)
+		isbn, created := CreateBook(book)
+		if created {
+			w.Header().Add("Location", "api/books/"+isbn)
+			w.WriteHeader(http.StatusCreated)
+		} else {
+			w.WriteHeader(http.StatusConflict)
 		}
 	default:
 		w.WriteHeader(http.StatusBadRequest)
@@ -72,6 +74,7 @@ func AllBooks() []Book {
 
 func CreateBook(book Book) (string, bool) {
 	_, exists := books[book.ISBN]
+
 	if exists {
 		return "", false
 	}
