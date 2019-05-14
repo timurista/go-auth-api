@@ -1,11 +1,9 @@
-FROM golang:1.7.4
+FROM alpine:3.5
 LABEL author Tim Urista
 
-ENV SOURCES /go/src/github.com/timurista/go-auth-api/
+COPY ./cloud-native-go /app/cloud-native-go
 
-COPY . ${SOURCES}
-
-RUN cd ${SOURCES} && CGO_ENABLED=0 go install
+RUN chmod +x /app/cloud-native-go
 
 ENV PORT 8080
 EXPOSE 8080
