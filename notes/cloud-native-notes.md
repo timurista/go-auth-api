@@ -43,3 +43,4 @@ limitations
 - application platform (runtime env and api for apps)
 
 
+`eval "$(docker-machine env default)"`
