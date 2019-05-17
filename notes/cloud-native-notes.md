@@ -44,3 +44,9 @@ limitations
 
 
 `eval "$(docker-machine env default)"`
+
+```
+CGO_ENABLED=0
+GOOS=linux
+GOARCH=amd64
+```
