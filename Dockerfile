@@ -8,4 +8,4 @@ RUN chmod +x /app/cloud-native-go
 ENV PORT 8080
 EXPOSE 8080
 
-ENTRYPOINT ["main"]
+ENTRYPOINT /app/cloud-native-go
